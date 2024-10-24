@@ -1,0 +1,3 @@
+.env
+/backend/_uploads/
+/backend/__pycache__
