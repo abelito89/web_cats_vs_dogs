@@ -1,3 +1,4 @@
 .env
 /backend/_uploads/
-/backend/__pycache__
+/backend/__pycache__/
+/backend/notebooks/PetImages/

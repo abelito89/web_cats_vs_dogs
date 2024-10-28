@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
+from preprocessing_module import preprocess_image_manually
 
 
 app = FastAPI()
@@ -30,10 +31,12 @@ def load_model(current_dir):
         print(f"Error al cargar el modelo: {e}")
 
     # Definir el tamaño de entrada de la imagen (según fue entrenado el modelo)
-    
+    if modelo is None:
+        raise RuntimeError("No se pudo cargar el modelo.")
     return modelo
 
 modelo = load_model(current_dir)
+
 
 def jpg_verify(file:UploadFile) -> Optional[dict]:
         try:
@@ -61,38 +64,6 @@ def jpg_verify(file:UploadFile) -> Optional[dict]:
             return None
 
 
-def preprocess_image(image: Image.Image, target_size=IMG_SIZE) -> np.ndarray:
-    """
-    Preprocesa la imagen para que sea compatible con el modelo entrenado.
-    
-    - Redimensiona la imagen a (180, 180).
-    - Convierte la imagen a un array numpy.
-    - Reescala los valores de los píxeles a un rango entre 0 y 1.
-    - Aplana la imagen para que sea compatible con la capa densa.
-    
-    Args:
-        image (PIL.Image.Image): La imagen cargada.
-        target_size (tuple): El tamaño objetivo de la imagen (ancho, alto).
-        
-    Returns:
-        np.ndarray: Imagen preprocesada como array de numpy.
-    """
-    # Redimensionar la imagen al tamaño requerido por el modelo (180x180)
-    image = image.resize(target_size)
-    
-    # Convertir la imagen a un array numpy y asegurarse de que tiene 3 canales (RGB)
-    image_array = np.array(image)
-    
-    # Asegurar que la imagen tiene forma (180, 180, 3)
-    if image_array.shape[-1] != 3:
-        raise ValueError("La imagen no tiene 3 canales (RGB). Asegúrate de cargar una imagen en color.")
-    
-    # Reescalar los valores de píxeles a un rango de 0 a 1
-    image_array = image_array / 255.0
-        # Añadir la dimensión del batch (1, 180, 180, 3)
-    image_array = np.expand_dims(image_array, axis=0)
-    
-    return image_array
 
 # Función para cargar y preprocesar la imagen
 def read_imagefile(file):
@@ -113,18 +84,24 @@ async def predict_image(file: UploadFile = File(...)):
         file_content = await file.read()  # Lee el archivo en memoria
         if not file_content:  # Verifica si el archivo está vacío
             return {"error": "El archivo está vacío."}
-        image = Image.open(BytesIO(file_content))  # Abre la imagen desde los bytes
-
-        print("imagen cargada")
-        image_ready = preprocess_image(image)
-        print("imagen preprocesada")
         
+        # Guardar la imagen temporalmente
+        temp_image_path = current_dir / "temp_image.jpg"  # Ruta temporal
+        with open(temp_image_path, "wb") as buffer:
+            buffer.write(file_content)  # Guarda el contenido previamente leído
+
+        # Llamar a preprocess_image_manually con la ruta temporal
+        image_ready = preprocess_image_manually(str(temp_image_path), image_size=(180, 180), color_mode="rgb")
+
+        
+
         # Realizar la predicción con el modelo
         prediction = modelo.predict(image_ready)
-        print("prediccion hecha")
-        
+        print("predicción hecha", prediction)
+
         # Asumiendo que el modelo devuelve un valor cercano a 0 para 'cat' y cercano a 1 para 'dog'
         predicted_class = "dog" if prediction[0][0] > 0.5 else "cat"
+
         # Supongamos que guardas la imagen en _uploads
         image_path = f"_uploads/{file.filename}"
 
@@ -132,6 +109,10 @@ async def predict_image(file: UploadFile = File(...)):
             buffer.write(file_content)  # Guarda el contenido previamente leído
 
         image_url = f"http://127.0.0.1:8000/_uploads/{file.filename}"
+
+        # Opcional: Eliminar el archivo temporal después de su uso
+        temp_image_path.unlink(missing_ok=True)  # Elimina el archivo si existe
+
         return {"prediction": predicted_class, "image_url": image_url}
     except Exception as e:
         return {"error": f"Error procesando la imagen: {e}"}
