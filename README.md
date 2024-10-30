@@ -127,3 +127,10 @@ Sí, es totalmente posible tener dos entornos virtuales activos al mismo tiempo,
 Sí, puedes tener dos entornos virtuales activos al mismo tiempo ejecutando el backend y el frontend por separado. Las aplicaciones se comunican entre sí mediante solicitudes HTTP, lo que es independiente de los entornos virtuales en los que se ejecutan. Este es un enfoque estándar en el desarrollo de aplicaciones web modernas y te permitirá utilizar las versiones de Python y las dependencias que cada componente requiere.
 
 Si necesitas más ayuda para configurar alguno de los componentes o para establecer la comunicación entre el frontend y el backend, ¡no dudes en preguntar!
+
+### Comentarios sobre requirements.txt
+Usa para poner en tu requirements.txt solo los main packages y no todas las dependencias. 
+```shell
+pip install pipreqs
+pipreqs /path/to/your/project --force
+```

@@ -1,15 +1,14 @@
+import logging
 from fastapi import FastAPI, File, UploadFile
 import uvicorn
-from io import BytesIO
 from pathlib import Path
-import tensorflow as tf
+from PIL import Image, UnidentifiedImageError
 from tensorflow import keras
-import numpy as np
-from PIL import Image
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from preprocessing_module import preprocess_image_manually
 
+_logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -28,41 +27,41 @@ def load_model(current_dir):
     try:
         modelo = keras.models.load_model(model_path)
     except Exception as e:
-        print(f"Error al cargar el modelo: {e}")
+        _logger.error(f"Error al cargar el modelo: {e}")
+        # Using raise alone in the except block is a way to re-raise the same exception that
+        # was caught without modifying it. This approach preserves the original exception
+        # type and traceback, making it easier to debug by keeping the context of the original error.
+        raise
 
     # Definir el tamaño de entrada de la imagen (según fue entrenado el modelo)
-    if modelo is None:
+    if not modelo:
         raise RuntimeError("No se pudo cargar el modelo.")
     return modelo
 
 modelo = load_model(current_dir)
 
 
-def jpg_verify(file:UploadFile) -> Optional[dict]:
+def jpg_verify(file:UploadFile) -> Optional[bool]:
         try:
         # Leer los primeros bytes del archivo
             file.file.seek(0)  # Asegurarse de estar al inicio del archivo
-            header = file.file.read(10)  # Leer los primeros 10 bytes para buscar "JFIF"
-            file.file.seek(0)  # Volver a posicionar el puntero al inicio
-            
-            # Convertir a string en caso de que los bytes contengan texto
-            if b'JFIF' in header:
-                return True  # Si contiene "JFIF", es un archivo JPEG válido
-            else:
-                return False  # No es un archivo JPEG válido
-        except AttributeError:
-        # Manejar errores relacionados con la ausencia de atributos
-            print("Error: El archivo no tiene los atributos correctos para ser procesado.")
-            return None
+            with Image.open(file.file) as img:
+                # Check if the format is JPEG
+                return img.format == "JPEG"
+        except UnidentifiedImageError:
+            _logger.error("El archivo no es una imagen válida.")
+            return False
         except OSError as e:
             # Captura errores relacionados con el sistema de archivos, como la lectura de archivos corruptos
-            print(f"Error de sistema de archivos: {e}")
+            _logger.error(f"Error de sistema de archivos: {e}")
+            return None
+        except AttributeError:
+            _logger.error("El archivo no tiene los atributos correctos para ser procesado.")
             return None
         except Exception as e:
             # Captura cualquier otra excepción general no prevista
-            print(f"Error inesperado: {e}")
+            _logger.error(f"Error inesperado: {e}")
             return None
-
 
 
 # Función para cargar y preprocesar la imagen
@@ -77,7 +76,7 @@ async def root():
 # Ruta para cargar y clasificar una imagen
 @app.post("/predict/")
 async def predict_image(file: UploadFile = File(...)):
-    if jpg_verify(file) is False:
+    if not jpg_verify(file):
         return {"error": "El archivo no es una imagen JPEG válida."}
     
     try:
@@ -93,11 +92,9 @@ async def predict_image(file: UploadFile = File(...)):
         # Llamar a preprocess_image_manually con la ruta temporal
         image_ready = preprocess_image_manually(str(temp_image_path), image_size=(180, 180), color_mode="rgb")
 
-        
-
         # Realizar la predicción con el modelo
         prediction = modelo.predict(image_ready)
-        print("predicción hecha", prediction)
+        _logger.info("predicción hecha", prediction)
 
         # Asumiendo que el modelo devuelve un valor cercano a 0 para 'cat' y cercano a 1 para 'dog'
         predicted_class = "dog" if prediction[0][0] > 0.5 else "cat"
