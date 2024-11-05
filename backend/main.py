@@ -1,17 +1,30 @@
 from fastapi import FastAPI, File, UploadFile
 import uvicorn
-from io import BytesIO
 from pathlib import Path
-import tensorflow as tf
 from tensorflow import keras
-import numpy as np
 from PIL import Image
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from preprocessing_module import preprocess_image_manually
+import logging
+from fastapi.middleware.cors import CORSMiddleware
+
+
+
+# Configura el nivel de registro para mostrar mensajes de depuración
+logging.basicConfig(level=logging.DEBUG)
+_logger = logging.getLogger(__name__)
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Cambia esto por el puerto que usa tu frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configura FastAPI para servir archivos estáticos desde la carpeta '_uploads'
 app.mount("/_uploads", StaticFiles(directory="_uploads"), name="uploads")
@@ -27,12 +40,10 @@ def load_model(current_dir):
     # Cargar el modelo (suponiendo que ya está entrenado y guardado como 'model.h5')
     try:
         modelo = keras.models.load_model(model_path)
+        _logger.info("Modelo cargado exitosamente")
     except Exception as e:
-        print(f"Error al cargar el modelo: {e}")
-
-    # Definir el tamaño de entrada de la imagen (según fue entrenado el modelo)
-    if modelo is None:
-        raise RuntimeError("No se pudo cargar el modelo.")
+        _logger.error(f"Error al cargar el modelo: {e}")
+        modelo = None
     return modelo
 
 modelo = load_model(current_dir)
@@ -52,31 +63,25 @@ def jpg_verify(file:UploadFile) -> Optional[dict]:
                 return False  # No es un archivo JPEG válido
         except AttributeError:
         # Manejar errores relacionados con la ausencia de atributos
-            print("Error: El archivo no tiene los atributos correctos para ser procesado.")
+            _logger.error("Error: El archivo no tiene los atributos correctos para ser procesado.")
             return None
         except OSError as e:
             # Captura errores relacionados con el sistema de archivos, como la lectura de archivos corruptos
-            print(f"Error de sistema de archivos: {e}")
+            _logger.error(f"Error de sistema de archivos: {e}")
             return None
         except Exception as e:
             # Captura cualquier otra excepción general no prevista
-            print(f"Error inesperado: {e}")
+            _logger.error(f"Error inesperado: {e}")
             return None
 
-
-
-# Función para cargar y preprocesar la imagen
-def read_imagefile(file):
-    pass
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
 
 # Ruta para cargar y clasificar una imagen
 @app.post("/predict/")
 async def predict_image(file: UploadFile = File(...)):
+
+    if not modelo:
+        return {"error": "El modelo no se ha cargado correctamente."}
+    
     if jpg_verify(file) is False:
         return {"error": "El archivo no es una imagen JPEG válida."}
     
