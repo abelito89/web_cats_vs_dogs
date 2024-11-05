@@ -56,11 +56,9 @@ def jpg_verify(file:UploadFile) -> Optional[dict]:
             header = file.file.read(10)  # Leer los primeros 10 bytes para buscar "JFIF"
             file.file.seek(0)  # Volver a posicionar el puntero al inicio
             
-            # Convertir a string en caso de que los bytes contengan texto
-            if b'JFIF' in header:
-                return True  # Si contiene "JFIF", es un archivo JPEG válido
-            else:
-                return False  # No es un archivo JPEG válido
+            # Convertir a string en caso de que los bytes contengan texto y retornar True si contiene "JFIF"
+            return b'JFIF' in header
+        
         except AttributeError:
         # Manejar errores relacionados con la ausencia de atributos
             _logger.error("Error: El archivo no tiene los atributos correctos para ser procesado.")
@@ -68,6 +66,9 @@ def jpg_verify(file:UploadFile) -> Optional[dict]:
         except OSError as e:
             # Captura errores relacionados con el sistema de archivos, como la lectura de archivos corruptos
             _logger.error(f"Error de sistema de archivos: {e}")
+            return None
+        except AttributeError as e:
+            _logger.error(f"El archivo no tiene los atributos para ser procesado")
             return None
         except Exception as e:
             # Captura cualquier otra excepción general no prevista
@@ -82,7 +83,7 @@ async def predict_image(file: UploadFile = File(...)):
     if not modelo:
         return {"error": "El modelo no se ha cargado correctamente."}
     
-    if jpg_verify(file) is False:
+    if not jpg_verify(file):
         return {"error": "El archivo no es una imagen JPEG válida."}
     
     try:
@@ -98,11 +99,9 @@ async def predict_image(file: UploadFile = File(...)):
         # Llamar a preprocess_image_manually con la ruta temporal
         image_ready = preprocess_image_manually(str(temp_image_path), image_size=(180, 180), color_mode="rgb")
 
-        
-
         # Realizar la predicción con el modelo
         prediction = modelo.predict(image_ready)
-        print("predicción hecha", prediction)
+        _logger.info(f"predicción hecha{prediction}")
 
         # Asumiendo que el modelo devuelve un valor cercano a 0 para 'cat' y cercano a 1 para 'dog'
         predicted_class = "dog" if prediction[0][0] > 0.5 else "cat"
