@@ -8,6 +8,13 @@ class AppState(rx.State):
     async def handle_upload(self, files: list[rx.UploadFile]):
         """Envía la imagen a la API FastAPI."""
         file = files[0]  # Solo manejar el primer archivo
+
+        """if "error" in file:
+            print(f"Error en la carga: {file['error']}")
+            self.prediction = "Error en la predicción"
+        else:
+            self.prediction = file["prediction"]
+"""
         if files:
             async with aiohttp.ClientSession() as session:
             

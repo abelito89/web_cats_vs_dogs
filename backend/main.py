@@ -49,31 +49,24 @@ def load_model(current_dir):
 modelo = load_model(current_dir)
 
 
-def jpg_verify(file:UploadFile) -> Optional[dict]:
-        try:
-        # Leer los primeros bytes del archivo
-            file.file.seek(0)  # Asegurarse de estar al inicio del archivo
-            header = file.file.read(10)  # Leer los primeros 10 bytes para buscar "JFIF"
-            file.file.seek(0)  # Volver a posicionar el puntero al inicio
-            
-            # Convertir a string en caso de que los bytes contengan texto y retornar True si contiene "JFIF"
-            return b'JFIF' in header
-        
-        except AttributeError:
-        # Manejar errores relacionados con la ausencia de atributos
-            _logger.error("Error: El archivo no tiene los atributos correctos para ser procesado.")
-            return None
-        except OSError as e:
-            # Captura errores relacionados con el sistema de archivos, como la lectura de archivos corruptos
-            _logger.error(f"Error de sistema de archivos: {e}")
-            return None
-        except AttributeError as e:
-            _logger.error(f"El archivo no tiene los atributos para ser procesado")
-            return None
-        except Exception as e:
-            # Captura cualquier otra excepción general no prevista
-            _logger.error(f"Error inesperado: {e}")
-            return None
+def jpg_verify(file: UploadFile) -> Optional[bool]:
+    try:
+        # Intentar abrir la imagen usando Pillow
+        with Image.open(file.file) as img:
+            # Verificar si el formato de la imagen es JPEG
+            return img.format == "JPEG"
+    except AttributeError:
+        # Manejar errores si el archivo no tiene los atributos correctos
+        _logger.error("Error: El archivo no tiene los atributos correctos para ser procesado.")
+        return None
+    except (OSError, IOError) as e:
+        # Captura errores relacionados con el sistema de archivos, como archivos corruptos o inválidos
+        _logger.error(f"Error de sistema de archivos: {e}")
+        return None
+    except Exception as e:
+        # Captura cualquier otra excepción general no prevista
+        _logger.error(f"Error inesperado: {e}")
+        return None
 
 
 # Ruta para cargar y clasificar una imagen
@@ -84,12 +77,12 @@ async def predict_image(file: UploadFile = File(...)):
         return {"error": "El modelo no se ha cargado correctamente."}
     
     if not jpg_verify(file):
-        return {"error": "El archivo no es una imagen JPEG válida."}
-    
+        return {"prediction":None, "error": "El archivo no es una imagen JPEG válida."}
+    file.file.seek(0)
     try:
         file_content = await file.read()  # Lee el archivo en memoria
         if not file_content:  # Verifica si el archivo está vacío
-            return {"error": "El archivo está vacío."}
+            return {"prediction": None, "error": "El archivo está vacío."}
         
         # Guardar la imagen temporalmente
         temp_image_path = current_dir / "temp_image.jpg"  # Ruta temporal
@@ -119,7 +112,7 @@ async def predict_image(file: UploadFile = File(...)):
 
         return {"prediction": predicted_class, "image_url": image_url}
     except Exception as e:
-        return {"error": f"Error procesando la imagen: {e}"}
+        return {"prediction": None, "error": f"Error procesando la imagen: {e}"}
 
 
 if __name__ == "__main__":
