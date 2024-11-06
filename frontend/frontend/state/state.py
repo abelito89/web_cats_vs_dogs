@@ -9,12 +9,6 @@ class AppState(rx.State):
         """Envía la imagen a la API FastAPI."""
         file = files[0]  # Solo manejar el primer archivo
 
-        """if "error" in file:
-            print(f"Error en la carga: {file['error']}")
-            self.prediction = "Error en la predicción"
-        else:
-            self.prediction = file["prediction"]
-"""
         if files:
             async with aiohttp.ClientSession() as session:
             
@@ -25,9 +19,12 @@ class AppState(rx.State):
                     if resp.status == 200:
                         data = await resp.json()
                         print(data)  # Esto imprimirá todo el diccionario devuelto por FastAPI
-                        self.prediction = data["prediction"]
-                        self.img = data["image_url"]
-                        print(f"Image URL: {self.img}")   # Comprueba que la URL es la correcta
-                    
+                    # Agrega la verificación de "prediction" == None en el JSON de respuesta
+                        if data["prediction"] is None:
+                            self.prediction = data["error"]
+                        else:
+                            self.prediction = data["prediction"]
+                            self.img = data["image_url"]
+                            print(f"Image URL: {self.img}")   # Comprueba que la URL es la correcta
                     else:
                         self.prediction = "Error al subir la imagen"
