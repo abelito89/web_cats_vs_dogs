@@ -43,7 +43,7 @@ class AppState(rx.State):
 
                         else:
                             self.prediction = data["prediction"]
-                            self.img = data["image_url"]
-                            _logger.info(f"Image URL: {self.img}")   # Comprueba que la URL es la correcta
+                            """self.img = data["image_url"]"""
+                            """_logger.info(f"Image URL: {self.img}")"""   # Comprueba que la URL es la correcta
                     else:
                         self.prediction = "Error al subir la imagen"

@@ -27,7 +27,7 @@ app.add_middleware(
 )
 
 # Configura FastAPI para servir archivos estáticos desde la carpeta '_uploads'
-app.mount("/_uploads", StaticFiles(directory="_uploads"), name="uploads")
+"""app.mount("/_uploads", StaticFiles(directory="_uploads"), name="uploads")"""
 
 # Obtén la ruta del directorio donde está este script
 current_dir = Path(__file__).parent
