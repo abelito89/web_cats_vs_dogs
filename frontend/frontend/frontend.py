@@ -36,17 +36,17 @@ def index():
                 rx.fragment(
                     rx.text("Esto es un gato"),
                     rx.audio(
-                        url="https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+                        url=AppState.sound_url,
                         autoplay=True,
-                        controls=True,
+                        controls=False,
                     )
                 ),
                 rx.fragment(
                     rx.text("Esto es un perro"),
                     rx.audio(
-                        url="/assets/audio/ladrido.mp3",
+                        url=AppState.sound_url,
                         autoplay=True,
-                        controls=True,
+                        controls=False,
                     )
                 )
             ),

@@ -27,7 +27,8 @@ app.add_middleware(
 )
 
 # Configura FastAPI para servir archivos estáticos desde la carpeta '_uploads'
-"""app.mount("/_uploads", StaticFiles(directory="_uploads"), name="uploads")"""
+app.mount("/assets/audio", StaticFiles(directory="assets/audio"), name="audio")
+
 
 # Obtén la ruta del directorio donde está este script
 current_dir = Path(__file__).parent
@@ -98,6 +99,7 @@ async def predict_image(file: UploadFile = File(...)):
 
         # Asumiendo que el modelo devuelve un valor cercano a 0 para 'cat' y cercano a 1 para 'dog'
         predicted_class = "dog" if prediction[0][0] > 0.5 else "cat"
+        sound_url = f"http://127.0.0.1:8000/assets/audio/ladrido1.mp3" if prediction[0][0] > 0.5 else f"http://127.0.0.1:8000/assets/audio/maullido1.mp3"
 
         # Supongamos que guardas la imagen en _uploads
         image_path = f"_uploads/{file.filename}"
@@ -105,12 +107,11 @@ async def predict_image(file: UploadFile = File(...)):
         with open(image_path, "wb") as buffer:
             buffer.write(file_content)  # Guarda el contenido previamente leído
 
-        image_url = f"http://127.0.0.1:8000/_uploads/{file.filename}"
 
         # Opcional: Eliminar el archivo temporal después de su uso
         temp_image_path.unlink(missing_ok=True)  # Elimina el archivo si existe
 
-        return {"prediction": predicted_class, "image_url": image_url}
+        return {"prediction": predicted_class, "sound_url": sound_url}
     except Exception as e:
         return {"prediction": None, "error": f"Error procesando la imagen: {e}"}
 

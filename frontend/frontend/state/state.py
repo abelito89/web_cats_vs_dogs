@@ -9,6 +9,7 @@ _logger = logging.getLogger(__name__)
 class AppState(rx.State):
     img: str = ""
     prediction: str = ""
+    sound_url: str = ""
 
 
     async def handle_upload(self, files: list[rx.UploadFile]):
@@ -43,7 +44,9 @@ class AppState(rx.State):
 
                         else:
                             self.prediction = data["prediction"]
+                            self.sound_url = data.get("sound_url","")
                             """self.img = data["image_url"]"""
                             """_logger.info(f"Image URL: {self.img}")"""   # Comprueba que la URL es la correcta
                     else:
                         self.prediction = "Error al subir la imagen"
+                        self.sound_url = ""
