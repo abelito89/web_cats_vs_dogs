@@ -26,13 +26,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configura FastAPI para servir archivos estáticos desde la carpeta '_uploads'
+# Configura FastAPI para servir archivos estáticos desde la carpeta '/assets/audio'
 app.mount("/assets/audio", StaticFiles(directory="assets/audio"), name="audio")
 
 
 # Obtén la ruta del directorio donde está este script
 current_dir = Path(__file__).parent
+"""uploads_dir = current_dir / "_uploads"  # Define el directorio _uploads"""
 IMG_SIZE = (180, 180)
+
+# Asegurar que la carpeta _uploads exista
+"""uploads_dir.mkdir(parents=True, exist_ok=True)"""
 
 def load_model(current_dir):
     # Construir una ruta para un archivo llamado 'file.txt' en un subdirectorio llamado 'data'
@@ -100,13 +104,6 @@ async def predict_image(file: UploadFile = File(...)):
         # Asumiendo que el modelo devuelve un valor cercano a 0 para 'cat' y cercano a 1 para 'dog'
         predicted_class = "dog" if prediction[0][0] > 0.5 else "cat"
         sound_url = f"http://127.0.0.1:8000/assets/audio/ladrido1.mp3" if prediction[0][0] > 0.5 else f"http://127.0.0.1:8000/assets/audio/maullido1.mp3"
-
-        # Supongamos que guardas la imagen en _uploads
-        image_path = f"_uploads/{file.filename}"
-
-        with open(image_path, "wb") as buffer:
-            buffer.write(file_content)  # Guarda el contenido previamente leído
-
 
         # Opcional: Eliminar el archivo temporal después de su uso
         temp_image_path.unlink(missing_ok=True)  # Elimina el archivo si existe
