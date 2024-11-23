@@ -13,34 +13,67 @@ _logger = logging.getLogger(__name__)
 
 def index():
     """Vista principal de la aplicación."""
-    return rx.vstack(
-        upload_button(),  # Botón para subir imágenes
-        rx.cond(
-            AppState.img != "",  # Mostrar la imagen apenas esté disponible
-             rx.image(
-                src=AppState.img,
-                width="300px",  # Define un ancho fijo para todas las imágenes
-                height="auto",  # Ajusta la altura automáticamente para mantener la proporción
+    box = rx.box(
+        navbar(),
+        rx.center(
+            rx.vstack(
+                rx.box(
+                    rx.box(
+                        upload_button(),  # Botón para subir imágenes
+                        rx.cond(
+                            AppState.img != "",  # Mostrar la imagen apenas esté disponible
+                            rx.image(
+                                src=AppState.img,
+                                width="300px",  # Define un ancho fijo para todas las imágenes
+                                height="auto",  # Ajusta la altura automáticamente para mantener la proporción
+                                margin_top="1em"
+                            )
+                        ),
+                        width="300px"
+                    ),
+                    rx.cond(
+                        AppState.prediction != "",  # Mostrar predicción y reproducir audio si está disponible
+                        rx.vstack(
+                            rx.cond(
+                                AppState.prediction == "cat",
+                                rx.text(
+                                    "Esto es un gato", 
+                                    margin="0.5em auto",
+                                    font_size="1.2em",
+                                    text_align="center",
+                                    ),
+                                rx.text(
+                                    "Esto es un perro", 
+                                    margin="0.5em auto",
+                                    font_size="1.2em",
+                                    text_align="center",
+                                    )
+                            ),
+                            rx.audio(
+                                url=AppState.sound_url,
+                                autoplay=True,
+                                controls=True,  # Oculta los controles
+                                margin_top = "auto"
+                            ),
+                            spacing="1em",
+                            align_items="center",
+                        ),
+                        rx.text(    
+                            "Por favor, sube una imagen para obtener un resultado.",
+                            text_align="center",  # Centrar texto inicial
+                            margin_top="1em",
+                                ),
+                    ),
+                spacing="1em",  # Espaciado uniforme entre elementos                
+                )
             ),
-        ),
-        rx.cond(
-            AppState.prediction != "",  # Mostrar predicción y reproducir audio si está disponible
-            rx.fragment(
-                rx.cond(
-                    AppState.prediction == "cat",
-                    rx.text("Esto es un gato"),
-                    rx.text("Esto es un perro")
-                ),
-                rx.audio(
-                    url=AppState.sound_url,
-                    autoplay=True,
-                    controls=True,  # Oculta los controles
-                ),
-            ),
-            rx.text("Por favor, sube una imagen para obtener un resultado."),
-        ),
-        padding="5em",
+        width="100%",  # Usar todo el ancho disponible
+        padding="2em",
+        #background_color="#1c1c1c",  # Fondo oscuro para contraste
+        align="center"
+        )    
     )
+    return box
 
 
 

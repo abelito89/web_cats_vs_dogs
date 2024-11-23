@@ -32,11 +32,7 @@ app.mount("/assets/audio", StaticFiles(directory="assets/audio"), name="audio")
 
 # Obtén la ruta del directorio donde está este script
 current_dir = Path(__file__).parent
-"""uploads_dir = current_dir / "_uploads"  # Define el directorio _uploads"""
 IMG_SIZE = (180, 180)
-
-# Asegurar que la carpeta _uploads exista
-"""uploads_dir.mkdir(parents=True, exist_ok=True)"""
 
 def load_model(current_dir):
     # Construir una ruta para un archivo llamado 'file.txt' en un subdirectorio llamado 'data'
