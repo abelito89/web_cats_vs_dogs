@@ -7,6 +7,7 @@ def upload_button():
         rx.vstack(
             rx.button("Seleccionar imagen"),
             rx.text("Arrastra y suelta aquí o haz clic para seleccionar"),
+            align="center"
         ),
         id="upload_image",
         on_drop=AppState.handle_upload(rx.upload_files(upload_id="upload_image")),
