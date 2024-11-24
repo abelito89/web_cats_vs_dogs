@@ -10,31 +10,41 @@ def prediction_display() -> rx.Component:
                 AppState.prediction == "cat",
                 rx.text(
                     "Esto es un gato", 
-                    margin="0.5em auto",
+                    margin="0 auto",
                     font_size="1.2em",
                     text_align="center",
                     ),
                 rx.text(
                     "Esto es un perro", 
-                    margin="0.5em auto",
+                    margin="0 auto",
                     font_size="1.2em",
                     text_align="center",
                     )
             ),
-            rx.audio(
+            
+                rx.audio(
                 url=AppState.sound_url,
                 autoplay=True,
                 controls=True,  # Oculta los controles
-                margin_top = "auto"
-            ),
-            spacing="1em",
+
+                ),
+
+            spacing="0.2em",
             align_items="center",
+            justify_content="center",
         ),
         rx.text(    
             "Por favor, sube una imagen para obtener un resultado.",
             text_align="center",  # Centrar texto inicial
             margin_top="1em",
-                ),
-    )
+            
+        ),
+    ),
+    style={
+        "margin": "0",
+        "padding": "0",
+        "height": "auto",
+        "min-height": "auto",
+    },
     )
     return box

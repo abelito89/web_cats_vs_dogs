@@ -13,6 +13,7 @@ def upload_button():
         on_drop=AppState.handle_upload(rx.upload_files(upload_id="upload_image")),
         border="1px dotted #707070",
         padding="2em",
+        margin="2em",
         accept={"image/jpeg": [".jpg", ".jpeg"], "image/png": [".png"]},
         max_files=1,
     )
