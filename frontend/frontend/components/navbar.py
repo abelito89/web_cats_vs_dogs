@@ -1,6 +1,18 @@
 import reflex as rx
 
 def navbar() -> rx.Component:
+    """
+    Crea la barra de navegación principal de la aplicación.
+
+    Esta función crea un componente de Reflex que representa la barra de navegación principal
+    de la aplicación. La barra de navegación incluye el título "Neural network" y está estilizada
+    con un fondo azul, texto blanco y una sombra para dar profundidad.
+
+    Retorna:
+    --------
+    rx.Component
+        Un componente de Reflex que representa la barra de navegación principal.
+    """
     return rx.hstack(
         rx.text(
             "Neural network",

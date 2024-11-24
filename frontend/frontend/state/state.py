@@ -7,17 +7,43 @@ logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
 class AppState(rx.State):
+    """
+    Estado de la aplicación para manejar la carga de imágenes y las predicciones.
+
+    Atributos:
+    ----------
+    img : str
+        La URL de la imagen cargada en formato Base64.
+    prediction : str
+        La predicción realizada por el modelo ('cat' o 'dog').
+    sound_url : str
+        La URL del sonido correspondiente a la predicción.
+    """
     img: str = ""
     prediction: str = ""
     sound_url: str = ""
 
-
     async def handle_upload(self, files: list[rx.UploadFile]):
-        """Envía la imagen a la API FastAPI y muestra la imagen cargada."""
+        """
+        Maneja la carga de imágenes y envía la imagen a la API FastAPI para obtener una predicción.
+
+        Esta función lee el archivo de imagen subido, lo convierte a Base64 para mostrarlo en la interfaz,
+        y lo envía al backend para obtener una predicción. Actualiza el estado de la aplicación con la
+        imagen cargada, la predicción y la URL del sonido correspondiente.
+
+        Parámetros:
+        -----------
+        files : list[rx.UploadFile]
+            Lista de archivos subidos por el usuario. Solo se maneja el primer archivo de la lista.
+
+        Retorna:
+        --------
+        None
+        """
         file = files[0]  # Solo manejar el primer archivo
 
         if file:
-                # Leer los datos del archivo
+            # Leer los datos del archivo
             file_data = await file.read()
 
             # Obtener el tipo de contenido
@@ -41,12 +67,12 @@ class AppState(rx.State):
                         # Verifica si "prediction" es None
                         if data.get("prediction") is None:
                             self.prediction = data.get("error", "Error desconocido")
-
                         else:
                             self.prediction = data["prediction"]
-                            self.sound_url = data.get("sound_url","")
+                            self.sound_url = data.get("sound_url", "")
                             """self.img = data["image_url"]"""
                             """_logger.info(f"Image URL: {self.img}")"""   # Comprueba que la URL es la correcta
                     else:
                         self.prediction = "Error al subir la imagen"
                         self.sound_url = ""
+

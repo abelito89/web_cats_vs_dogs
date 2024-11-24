@@ -2,7 +2,18 @@ import reflex as rx
 from frontend.state.state import AppState
 
 def upload_button():
-    """Crea un botón de subida de imagen."""
+    """
+    Crea un botón de subida de imagen.
+
+    Esta función crea un componente de Reflex que permite al usuario subir una imagen.
+    El botón permite seleccionar una imagen desde el dispositivo o arrastrar y soltar
+    la imagen en el área designada. Se aceptan archivos JPEG y PNG.
+
+    Retorna:
+    --------
+    rx.Component
+        Un componente de Reflex que representa el botón de subida de imagen.
+    """
     return rx.upload(
         rx.vstack(
             rx.button("Seleccionar imagen"),
