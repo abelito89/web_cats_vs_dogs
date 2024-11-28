@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"  # Mapea el backend en el puerto 8000
+    volumes:
+      - ./backend:/app
+    environment:
+      - TF_FORCE_GPU_ALLOW_GROWTH=true  # Configuración para TensorFlow
+    
+    networks:
+      - app_network  # Aquí se agrega la red personalizada
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]  # Usa GPU si está disponible
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "50001:3000"  # Expone el frontend en el puerto 50001
+    volumes:
+      - ./frontend:/app
+    environment:
+      # Variables para que el frontend apunte correctamente al backend
+      - RX_BACKEND_HOST=http://backend:8000
+
+    networks:
+      - app_network  # Aquí se agrega la red personalizada
+
+networks:
+  app_network:
+    driver: bridge  # Esto asegura que ambos contenedores están en la misma red
