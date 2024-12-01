@@ -38,7 +38,7 @@ def prediction_display() -> rx.Component:
                     autoplay=True,
                     controls=True,  # Oculta los controles
                 ),
-                spacing="0.2em",
+                spacing="2",
                 align_items="center",
                 justify_content="center",
             ),

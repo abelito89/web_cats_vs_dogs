@@ -10,30 +10,16 @@ services:
     environment:
       - TF_FORCE_GPU_ALLOW_GROWTH=true  # Configuración para TensorFlow
     
-    networks:
-      - app_network  # Aquí se agrega la red personalizada
-
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]  # Usa GPU si está disponible
-
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "50001:3000"  # Expone el frontend en el puerto 50001
+      - "50001:3000"  # Expone el frontend en el puerto 50001 (puerto usado en el navegador)
+      - "51001:51001"  # Redirecciona el puerto 51001 al puerto 51001 (que luego se utiliza en el rxconfig como puerto usado por el backend de reflex)
+    depends_on:
+      - backend  # Espera a que el backend esté listo
     volumes:
       - ./frontend:/app
     environment:
-      # Variables para que el frontend apunte correctamente al backend
-      - RX_BACKEND_HOST=http://backend:8000
-
-    networks:
-      - app_network  # Aquí se agrega la red personalizada
-
-networks:
-  app_network:
-    driver: bridge  # Esto asegura que ambos contenedores están en la misma red
+      - BACKEND_IP_ADDRESS=${BACKEND_IP_ADDRESS}  # debemos especificar el IP del host (donde esta corriendo fastAPI). Como esta corriendo en Docker `localhost` no funciona. Este valor lo vamos a especificar en el fichero .env para no tener su valor fijo en el docker compose

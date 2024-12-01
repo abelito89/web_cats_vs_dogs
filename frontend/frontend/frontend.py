@@ -30,7 +30,7 @@ def index():
                 align="center"
             ),
             prediction_display(),
-            spacing="1em",  # Espaciado uniforme entre elementos  
+            spacing="2",  # Espaciado uniforme entre elementos  
             align="center"                 
         ),
         width="100%",  # Usar todo el ancho disponible
@@ -41,8 +41,5 @@ def index():
 
     return box
 
-
-
-
-app = rx.App(State=AppState, config=config)
+app = rx.App()
 app.add_page(index)
