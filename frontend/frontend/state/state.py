@@ -2,6 +2,7 @@ import reflex as rx
 import aiohttp
 import logging
 import base64
+import os
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
@@ -59,8 +60,8 @@ class AppState(rx.State):
             async with aiohttp.ClientSession() as session:
                 form = aiohttp.FormData()
                 form.add_field("file", file_data, filename=file.filename, content_type="image/jpeg")
-                
-                async with session.post("http://127.0.0.1:8000/predict/", data=form) as resp:
+                backend_ip_address = os.getenv("BACKEND_IP_ADDRESS", "localhost")
+                async with session.post(f"http://{backend_ip_address}:8000/predict/", data=form) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         _logger.info(data)  # Esto imprimirá todo el diccionario devuelto por FastAPI
